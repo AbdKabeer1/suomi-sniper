@@ -51,7 +51,7 @@ chain fifty times.
 | `src/ui/screens.js` | Campaign/skirmish menu with preview, rifle + ammunition + difficulty step, HUD, pause, results |
 | `src/ui/reticle.js` | The scope window and mil-dot reticle, aim bracket, range readout, third-person crosshair |
 | `tools/cover.html` | Generates the start.ng cover picture |
-| `startng.json` | Leaderboard columns: kills, linesHeld |
+| `startng.json` | Leaderboard columns: kills, lines_held |
 
 ---
 

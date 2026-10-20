@@ -762,7 +762,9 @@ async function finishRound(event) {
 
   let saved = null;
   if (signedIn) {
-    saved = await saveScore({ kills: event.kills, linesHeld: event.linesHeld });
+    // start.ng leaderboard keys must be lowercase snake_case; the game's own
+    // `linesHeld` stays camelCase internally.
+    saved = await saveScore({ kills: event.kills, lines_held: event.linesHeld });
   }
   const { entries, local } = await refreshBoard();
 

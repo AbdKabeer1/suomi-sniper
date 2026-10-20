@@ -80,7 +80,7 @@ function boardTable(entries, local, highlightId) {
         el('span', { class: 'board-rank', text: String(e.rank) }),
         el('span', { class: 'board-name', text: e.name }),
         el('span', { class: 'board-stat', text: `${stats.kills ?? 0} down` }),
-        el('span', { class: 'board-stat', text: `${stats.linesHeld ?? 0} held` }),
+        el('span', { class: 'board-stat', text: `${stats.lines_held ?? 0} held` }),
       ])
     );
   });
