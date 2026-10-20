@@ -94,9 +94,15 @@ npm run preview      # serve the build locally
 ## Deploy
 
 - Platform: start.ng (serves `dist/`, `build/`, `docs/` or `out/`).
-- Command: `npm run build`, commit `dist/`, push, then `POST /games/check` and
-  `POST /games/publish`. See `README.md` → "Deploying to start.ng".
-- URL: a `*.start.ng` address.
+- Repo: https://github.com/AbdKabeer1/suomi-sniper (public, `main`).
+- URL: https://suomi-sniper.start.ng (live).
+- Command: `npm run build`, commit `dist/`, push. The first publish needed
+  `POST /games/check` then `POST /games/publish` and approving the returned
+  `approve_url`; after that, pushes update the game automatically.
+- **Leaderboard keys** in `startng.json` must be lowercase `[a-z0-9_]` (max 24):
+  `kills`, `lines_held`. `linesHeld` is rejected by validation — keep the
+  snake_case key at the API boundary and the camelCase name inside the game.
+- `dist/` is committed on purpose; do not add it to `.gitignore`.
 
 ## Environment
 

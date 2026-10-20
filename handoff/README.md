@@ -84,6 +84,12 @@ starts an extraction; loud run enters extraction with marker, hunters and HUD;
 shellfire is scheduled; a direct shell drains blood; reaching the smoke wins
 under fire; results have no undefined stats.
 
+**Deployed:** public repo `AbdKabeer1/suomi-sniper`, `dist/` committed, start.ng
+check passed, live at **https://suomi-sniper.start.ng**. Live smoke test green
+(menu, canvas fill, start.ng guest card, assets, deploy into sortie 1, no fatal,
+no dev hook in the production bundle). Leaderboard keys are `kills` and
+`lines_held` — start.ng rejects camelCase stat keys.
+
 ## Acceptance criteria
 
 - `npm run build` completes with no errors. **Met.**

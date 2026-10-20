@@ -127,6 +127,23 @@ Last updated: 2026-10-20 (tenth pass — Paluu: the return)
   magazines, R to reload with stripper-clip sound and dry-click on empty.
 - Procedural-only assets, layers respected (`scene/` never imports `game/`).
 
+## Deployment (start.ng)
+
+- **Repo:** https://github.com/AbdKabeer1/suomi-sniper (public, `main`), started
+  from the previously empty repo on the owner's account.
+- **Build payload:** `dist/` committed (5 files, ~1.3 MB): `index.html`,
+  `cover.png`, hashed JS/CSS. `base: './'` keeps asset URLs relative.
+- **Validation:** `POST /games/check` passes; folder `dist`, no warnings.
+- **Live:** https://suomi-sniper.start.ng — approved and smoke-tested in a real
+  headless browser: menu, canvas fill, guest profile card from start.ng, cover
+  and hashed JS served, Deploy starts sortie 1 with the objective/ammo HUD, no
+  fatal bar, and the production build correctly has no `__sniper` dev hook.
+- **Updates:** pushing to `main` updates the game automatically. Rebuild
+  (`npm run build`) and commit `dist/` before pushing.
+- **Leaderboard keys:** start.ng requires lowercase `[a-z0-9_]`; the columns are
+  `kills` and `lines_held` (not `linesHeld`). The game keeps camelCase internally
+  and maps at the API boundary in `main.js`.
+
 ## In progress
 
 - Nothing. Complete and machine-verified.

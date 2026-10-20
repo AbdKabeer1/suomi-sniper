@@ -3,14 +3,15 @@
 Point-in-time snapshot of **Suomi Sniper**. Read this before changing anything —
 it records what is known-good, what has never been run, and what to do first.
 
-**Status: builds clean and runs.** The tenth pass adds **Paluu — the return**:
-every sortie now has an ending. A quiet run vanishes clean; a loud one triggers
-a flare, hunters and a counter-battery barrage, and you have to run to a green
-smoke marker to get out. The ninth pass gave each sortie a different objective
-plan (kills, sabotage, a sniper duel, a hold), added an ammunition loadout, built
-enemy camps with watchtowers and elevated guards, and made the enemies shoulder
-their rifles and shoot back with tracers. See `handoff/STATUS.md` and
-`handoff/DECISIONS.md` for the reasoning. Not yet hand-played on a real device.
+**Status: live at https://suomi-sniper.start.ng.** The tenth pass adds
+**Paluu — the return**: every sortie now has an ending. A quiet run vanishes
+clean; a loud one triggers a flare, hunters and a counter-battery barrage, and you
+have to run to a green smoke marker to get out. The ninth pass gave each sortie a
+different objective plan (kills, sabotage, a sniper duel, a hold), added an
+ammunition loadout, built enemy camps with watchtowers and elevated guards, and
+made the enemies shoulder their rifles and shoot back with tracers. See
+`handoff/STATUS.md` and `handoff/DECISIONS.md` for the reasoning. Not yet
+hand-played on a real device.
 
 ---
 
@@ -64,6 +65,13 @@ campaign menu, the rifle/ammo step with bordered Deploy button, the in-game camp
 with two watchtowers, the green extraction flare with `FALL BACK — 49 m`, and
 the under-fire results card. Scripts live outside the repo; see
 `handoff/RUNBOOK.md`.
+
+The production build is **live at https://suomi-sniper.start.ng** and was
+smoke-tested there: menu renders immediately, canvas fills the viewport at the
+drawing buffer's device ratio, the start.ng connect frame resolves the player as
+a guest with a sign-in button, `cover.png` and hashed assets serve, Deploy starts
+sortie 1 with the objective and `5/5` ammo HUD, there is no fatal bar, and the
+production bundle correctly omits the `__sniper` dev hook.
 
 What was checked in the ninth and tenth passes (headlines; full lists in
 `handoff/STATUS.md`):
