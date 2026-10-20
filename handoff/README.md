@@ -90,6 +90,29 @@ check passed, live at **https://suomi-sniper.start.ng**. Live smoke test green
 no dev hook in the production bundle). Leaderboard keys are `kills` and
 `lines_held` — start.ng rejects camelCase stat keys.
 
+## Wave 11 (current) — Mobile controls
+
+Owner: "i need it to rotate 360 on devices android or iphone with control to
+move, and reload ... a iphone doesnt have keyboard to play the game".
+
+Delivered:
+
+- [x] **360° look** — removed the ±π yaw clamp; drag anywhere on the world.
+- [x] **Movement** — analog left stick, merged into the same input as WASD.
+- [x] **Every other laptop control** — FIRE, AIM, RELOAD, ZOOM, VIEW, BREAD,
+      CROUCH, RUN; AIM/CROUCH/RUN are toggles, sprint and breath are covered.
+- [x] **Phone HUD** — score strip trimmed, meters panel, bread count on the
+      button, portrait objective row, safe-area insets, portrait rotate hint.
+- [x] **Lifecycle** — controls hidden in menu/results/pause, restored on resume,
+      reset on blur; iOS audio unlocked on first tap.
+- [x] **Bug fixes** — `.hud-level` had no CSS and overlapped the profile card;
+      meter labels were clipped.
+
+Acceptance (met by script, `mobile.mjs`): coarse-pointer emulation, hidden menu
+controls, 8 actions, swipe past 2π, stick move + release, bread heal, fire,
+reload, crouch, run, aim, zoom, view, pause/resume, portrait/landscape layout,
+no HUD overlap, canvas fill, and desktop still hides the touch layer.
+
 ## Acceptance criteria
 
 - `npm run build` completes with no errors. **Met.**

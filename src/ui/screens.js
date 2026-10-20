@@ -176,42 +176,169 @@ export function createUI(root) {
   });
   hud.appendChild(pauseBtn);
 
-  // Touch controls. Hidden by CSS on anything with a mouse, because the keyboard
-  // and right-click already cover those. A phone has neither.
+  // Touch controls. Hidden by CSS on anything with a mouse, because the keyboard  // and right-click already cover those. A phone has neither.
   //
-  // AIM is a tap to raise and a tap to drop, not a hold. On a phone the other
-  // thumb is busy dragging the view, and a button that has to stay pressed is a
-  // button you cannot aim with. ZOOM replaces the mouse wheel, which a phone
-  // does not have.
+  // Left thumb: analog stick plus the two movement toggles. Right thumb: FIRE,
+  // AIM, RELOAD, ZOOM, VIEW, BREAD. AIM is a tap to raise and a tap to drop —
+  // a hold button would fight the thumb that is dragging the view. Drag anywhere
+  // else on the glass to look; yaw is unbounded, so the view spins a full 360.
+  const touchQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
   let aimingTouch = false;
-  const aimBtn = el('button', { class: 'touch-btn touch-aim', text: 'AIM', 'aria-label': 'Aim' });
-  aimBtn.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    aimingTouch = !aimingTouch;
-    aimBtn.classList.toggle('touch-on', aimingTouch);
-    hud._onAim && hud._onAim(aimingTouch);
+
+  function makeToggle(className, label, onToggle) {
+    const button = el('button', {
+      class: `touch-btn ${className}`,
+      text: label,
+      'aria-label': label,
+    });
+    let on = false;
+    button.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      on = !on;
+      button.classList.toggle('touch-on', on);
+      onToggle(on);
+    });
+    return {
+      button,
+      reset() {
+        on = false;
+        button.classList.remove('touch-on');
+      },
+    };
+  }
+
+  function makePress(className, label, action) {
+    const button = el('button', {
+      class: `touch-btn ${className}`,
+      text: label,
+      'aria-label': label,
+    });
+    button.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      action();
+    });
+    return button;
+  }
+
+  const aimToggle = makeToggle('touch-aim', 'AIM', (on) => {
+    aimingTouch = on;
+    hud._onAim && hud._onAim(on);
   });
 
-  const zoomBtn = el('button', {
-    class: 'touch-btn touch-zoom',
-    text: 'ZOOM',
-    'aria-label': 'Magnification',
+  const crouchToggle = makeToggle('touch-crouch', 'CROUCH', (on) => {
+    hud._onCrouch && hud._onCrouch(on);
   });
-  zoomBtn.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
+
+  const sprintToggle = makeToggle('touch-run', 'RUN', (on) => {
+    hud._onSprint && hud._onSprint(on);
+  });
+
+  const zoomBtn = makePress('touch-zoom', 'ZOOM', () => {
     hud._onZoom && hud._onZoom();
   });
-
-  const fireBtn = el('button', { class: 'touch-btn touch-fire', text: 'FIRE', 'aria-label': 'Fire' });
-  fireBtn.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
+  const reloadBtn = makePress('touch-reload', 'RELOAD', () => {
+    hud._onReload && hud._onReload();
+  });
+  const viewBtn = makePress('touch-view', 'VIEW', () => {
+    hud._onView && hud._onView();
+  });
+  const breadBtn = makePress('touch-bread', 'BREAD', () => {
+    hud._onBread && hud._onBread();
+  });
+  const fireBtn = makePress('touch-fire', 'FIRE', () => {
     hud._onFire && hud._onFire();
   });
+
+  // ---- Virtual stick ----
+  const stickKnob = el('span', { class: 'touch-stick-knob' });
+  const stick = el('div', { class: 'touch-stick', 'aria-label': 'Movement stick' }, [
+    stickKnob,
+    el('span', { class: 'touch-stick-label', text: 'MOVE' }),
+  ]);
+
+  let stickPointer = null;
+
+  function updateStick(e) {
+    const rect = stick.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const max = rect.width * 0.34;
+    let dx = e.clientX - cx;
+    let dy = e.clientY - cy;
+    const len = Math.hypot(dx, dy);
+    if (len > max) {
+      dx = (dx / len) * max;
+      dy = (dy / len) * max;
+    }
+    stickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+
+    let nx = dx / max;
+    let ny = dy / max;
+    // A dead zone stops a resting thumb from making the player creep.
+    if (Math.hypot(nx, ny) < 0.16) {
+      nx = 0;
+      ny = 0;
+    }
+    hud._onMove && hud._onMove({ x: nx, y: -ny });
+  }
+
+  stick.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (stickPointer !== null) return;
+    stickPointer = e.pointerId;
+    try {
+      stick.setPointerCapture(e.pointerId);
+    } catch {
+      // Synthetic pointer in tests; move events still arrive on the element.
+    }
+    updateStick(e);
+  });
+
+  stick.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== stickPointer) return;
+    e.preventDefault();
+    updateStick(e);
+  });
+
+  function releaseStick(e) {
+    if (stickPointer === null || e.pointerId !== stickPointer) return;
+    stickPointer = null;
+    stickKnob.style.transform = 'translate(0, 0)';
+    hud._onMove && hud._onMove({ x: 0, y: 0 });
+  }
+  stick.addEventListener('pointerup', releaseStick);
+  stick.addEventListener('pointercancel', releaseStick);
+  stick.addEventListener('lostpointercapture', releaseStick);
+
+  const touchLeft = el('div', { class: 'touch-left' }, [
+    el('div', { class: 'touch-mini-row' }, [crouchToggle.button, sprintToggle.button]),
+    stick,
+  ]);
+  const touchRight = el('div', { class: 'touch-right' }, [
+    viewBtn,
+    breadBtn,
+    zoomBtn,
+    reloadBtn,
+    aimToggle.button,
+    fireBtn,
+  ]);
 
   // On <body>, not in the HUD. The scope's opaque surround is drawn later in
   // #ui, so anything inside the HUD disappears behind it — and the one moment
   // FIRE must be findable is the moment the scope is up.
-  document.body.appendChild(el('div', { class: 'touch-pad' }, [zoomBtn, aimBtn, fireBtn]));
+  document.body.appendChild(el('div', { class: 'touch-controls' }, [touchLeft, touchRight]));
+
+  // Portrait phones get one line of advice in the menu only. The game stays
+  // fully playable in portrait; landscape is simply the wider view.
+  document.body.appendChild(
+    el('div', { class: 'rotate-hint' }, [
+      el('span', { class: 'rotate-icon', text: '▭' }),
+      el('span', { text: 'Rotate to landscape' }),
+    ])
+  );
 
   root.appendChild(hud);
 
@@ -583,6 +710,30 @@ export function createUI(root) {
   ]);
   menu.appendChild(controls);
 
+  // A keyboard legend is useless on a phone. Swap it for the actual touch
+  // vocabulary so a first-time mobile player can see the controls immediately.
+  if (touchQuery.matches) {
+    controls.innerHTML = '';
+    const touchRows = [
+      ['STICK', 'move'],
+      ['DRAG', 'look 360°'],
+      ['FIRE', 'shoot'],
+      ['AIM', 'scope'],
+      ['RELOAD', 'clip'],
+      ['RUN', 'sprint'],
+      ['CROUCH', 'low'],
+      ['BREAD', 'heal'],
+    ];
+    for (const [key, label] of touchRows) {
+      controls.appendChild(
+        el('span', { class: 'control' }, [
+          el('b', { text: key }),
+          el('span', { text: label }),
+        ])
+      );
+    }
+  }
+
   const startBtn = el('button', {
     id: 'menuStart',
     class: 'btn btn-primary btn-deploy',
@@ -758,6 +909,11 @@ export function createUI(root) {
       if (key === lastHudKey) return;
       lastHudKey = key;
 
+      // The bread counter lives on the touch button instead of a separate HUD
+      // chip on phones; it is the same number, next to the thumb that uses it.
+      breadBtn.textContent = breadHeld > 0 ? `BREAD ${breadHeld}` : 'BREAD';
+      breadBtn.classList.toggle('touch-ready', breadHeld > 0);
+
       if (mission) {
         missionLine.classList.remove('hidden');
         missionTitle.textContent = mission.title;
@@ -855,11 +1011,39 @@ export function createUI(root) {
       hud._onZoom = handler;
     },
 
-    // The touch AIM button is a toggle, so it has to be told when the game has
-    // dropped the scope behind its back — on quit, pause or restart.
+    // The rest of the laptop controls, exposed to the touch layer.
+    onMove(handler) {
+      hud._onMove = handler;
+    },
+    onReload(handler) {
+      hud._onReload = handler;
+    },
+    onCrouch(handler) {
+      hud._onCrouch = handler;
+    },
+    onSprint(handler) {
+      hud._onSprint = handler;
+    },
+    onView(handler) {
+      hud._onView = handler;
+    },
+    onBread(handler) {
+      hud._onBread = handler;
+    },
+
+    // The touch toggles have to be told when the game has dropped the scope,
+    // crouch or sprint behind their back — on quit, pause, restart or blur.
     resetAim() {
       aimingTouch = false;
-      aimBtn.classList.remove('touch-on');
+      aimToggle.reset();
+      crouchToggle.reset();
+      sprintToggle.reset();
+      stickPointer = null;
+      stickKnob.style.transform = 'translate(0, 0)';
+      if (hud._onMove) hud._onMove({ x: 0, y: 0 });
+      if (hud._onAim) hud._onAim(false);
+      if (hud._onCrouch) hud._onCrouch(false);
+      if (hud._onSprint) hud._onSprint(false);
     },
 
     showPause({ onResume, onRestart, onQuit }) {

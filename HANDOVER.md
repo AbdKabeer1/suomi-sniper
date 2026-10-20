@@ -3,15 +3,18 @@
 Point-in-time snapshot of **Suomi Sniper**. Read this before changing anything —
 it records what is known-good, what has never been run, and what to do first.
 
-**Status: live at https://suomi-sniper.start.ng.** The tenth pass adds
-**Paluu — the return**: every sortie now has an ending. A quiet run vanishes
-clean; a loud one triggers a flare, hunters and a counter-battery barrage, and you
-have to run to a green smoke marker to get out. The ninth pass gave each sortie a
-different objective plan (kills, sabotage, a sniper duel, a hold), added an
-ammunition loadout, built enemy camps with watchtowers and elevated guards, and
-made the enemies shoulder their rifles and shoot back with tracers. See
-`handoff/STATUS.md` and `handoff/DECISIONS.md` for the reasoning. Not yet
-hand-played on a real device.
+**Status: live at https://suomi-sniper.start.ng.** The eleventh pass makes it
+fully playable on phones: a left movement stick, drag-anywhere 360° look, and a
+right-hand cluster for FIRE, AIM, RELOAD, ZOOM, VIEW, BREAD, CROUCH and RUN,
+with the same round rules as the keyboard. The tenth pass added **Paluu — the
+return**: every sortie now has an ending. A quiet run vanishes clean; a loud one
+triggers a flare, hunters and a counter-battery barrage, and you have to run to a
+green smoke marker to get out. The ninth pass gave each sortie a different
+objective plan (kills, sabotage, a sniper duel, a hold), added an ammunition
+loadout, built enemy camps with watchtowers and elevated guards, and made the
+enemies shoulder their rifles and shoot back with tracers. See
+`handoff/STATUS.md` and `handoff/DECISIONS.md` for the reasoning. Touch is
+verified in emulation; real-device feel is still a hand-play item.
 
 ---
 
@@ -31,8 +34,8 @@ chain fifty times.
 
 | File | Contains |
 | --- | --- |
-| `src/main.js` | Renderer and canvas sizing, first- and third-person cameras, view switching, scope zoom, breathing, pointer lock and touch input, magazine/reload keys, frame loop, campaign flow and progress persistence, ammo state |
-| `src/styles.css` | Interface, HUD, scope glass and reticle, touch controls, campaign card, loadout cards, ammo cards, bordered buttons |
+| `src/main.js` | Renderer and canvas sizing, first- and third-person cameras, view switching, scope zoom, breathing, pointer lock, touch joystick + 360° look + action wiring, magazine/reload keys, frame loop, campaign flow and progress persistence, ammo state |
+| `src/styles.css` | Interface, HUD, scope glass and reticle, touch control layout with safe-area insets, campaign card, loadout cards, ammo cards, bordered buttons |
 | `src/data/maps.js` | Four maps, named for their Winter War places (Kollaanjoki, Tolvajärvi, Suomussalmi, Salla), with terrain weather and prop density |
 | `src/data/campaign.js` | The 50-sortie ladder: per-sortie stakes, chapters with lore, difficulty presets, progress persistence |
 | `src/data/missions.js` | Eight reusable objective plans (kill / destroy / hold), selected deterministically by sortie number; tutorial and finale |
@@ -49,7 +52,7 @@ chain fifty times.
 | `src/game/round.js` | Exposure, stamina, health + hidden recovery, movement bounds, shooting, hit detection, magazine and reload rule, difficulty/noise scaling, ammunition effects, mission engine (kill/destroy/hold), crate destruction, heat, Paluu extraction phase and counter-battery, scoring |
 | `src/game/audio.js` | Layered rifle crack and echoes, enemy rifle by distance, shell whistle and impact, flare, wind bed, heartbeat, footsteps, bolt and dry and clip sounds |
 | `src/services/startng.js` | whoami, scores, leaderboard, sign-in |
-| `src/ui/screens.js` | Campaign/skirmish menu with preview, rifle + ammunition + difficulty step, HUD, pause, results |
+| `src/ui/screens.js` | Campaign/skirmish menu with preview, rifle + ammunition + difficulty step, HUD, pause, results, touch stick and action cluster |
 | `src/ui/reticle.js` | The scope window and mil-dot reticle, aim bracket, range readout, third-person crosshair |
 | `tools/cover.html` | Generates the start.ng cover picture |
 | `startng.json` | Leaderboard columns: kills, lines_held |
@@ -59,12 +62,12 @@ chain fifty times.
 ## Verification status
 
 Verified by script in headless Chromium (CDP, SwiftShader WebGL) against
-`npm run dev`; five suites all green — extraction, objectives, campaign,
+`npm run dev`; six suites all green — mobile, extraction, objectives, campaign,
 loadout/ADS/magazine, and the sortie-1 mission chain. Screenshots confirm the
 campaign menu, the rifle/ammo step with bordered Deploy button, the in-game camp
-with two watchtowers, the green extraction flare with `FALL BACK — 49 m`, and
-the under-fire results card. Scripts live outside the repo; see
-`handoff/RUNBOOK.md`.
+with two watchtowers, the green extraction flare with `FALL BACK — 49 m`, the
+under-fire results card, and the phone layout in both orientations. Scripts live
+outside the repo; see `handoff/RUNBOOK.md`.
 
 The production build is **live at https://suomi-sniper.start.ng** and was
 smoke-tested there: menu renders immediately, canvas fills the viewport at the
@@ -73,10 +76,16 @@ a guest with a sign-in button, `cover.png` and hashed assets serve, Deploy start
 sortie 1 with the objective and `5/5` ammo HUD, there is no fatal bar, and the
 production bundle correctly omits the `__sniper` dev hook.
 
-What was checked in the ninth and tenth passes (headlines; full lists in
+What was checked in the ninth–eleventh passes (headlines; full lists in
 `handoff/STATUS.md`):
 
-1. **Paluu works both ways.** A quiet run (heat 0) wins clean with "Clean exit —
+1. **Phone controls.** Emulated 844×390 landscape and 390×780 portrait: touch
+   controls hidden in the menu, all eight actions present in a round, a 960 px
+   swipe turns the view past 2π, the stick moves the player and releasing stops
+   him, BREAD shows the count and heals, FIRE/RELOAD/AIM/ZOOM/VIEW/CROUCH/RUN
+   all act, pause hides the controls and resume restores them, and the HUD
+   elements do not overlap.
+2. **Paluu works both ways.** A quiet run (heat 0) wins clean with "Clean exit —
    the snow never told on you" and never enters extraction. A loud run (heat 1)
    enters extraction: green marker visible, two hunters plus the camp, HUD
    `FALL BACK` with a rotating bearing, shellfire scheduled, a direct shell
@@ -341,44 +350,40 @@ the third pass.
 
 ## Known gaps
 
-1. **No touch movement.** A phone can aim, zoom, fire — and now magnify — but not
-   walk: there are no on-screen movement controls, and no way to hold your
-   breath. The third-person view does at least make the game watchable on a
-   phone. This is the biggest remaining gap.
-2. **No collision with props.** Rocks, logs and shrubs are scenery; you walk
+1. **No collision with props.** Rocks, logs and shrubs are scenery; you walk
    through them. The third-person camera can still clip into a large tree trunk.
-3. **No difficulty setting.** One balance point.
-4. **Patrols hone in perfectly** once alerted — they know your exact position
+2. **Patrols hone in perfectly** once alerted — they know your exact position
    rather than a rough one, which is harsher than the comment claims.
-5. **No wind effect on the bullet.** The wind is audio and atmosphere only; it
+3. **No wind effect on the bullet.** The wind is audio and atmosphere only; it
    doesn't move the shot.
-6. **No reload.** Rounds don't run out.
-7. **No cover system.** Line of sight is blocked by trees, but standing at a
+4. **No cover system.** Line of sight is blocked by trees, but standing at a
    hide has no mechanical benefit beyond being still.
-8. **The `QUIET` constant is unused.** Either remove it or give the HUD a "safe"
-   state.
-9. **The dev hook.** `main.js` exposes `window.__sniper` (including `weapon`,
-   `setZoom` and `zoom()`) when `import.meta.env.DEV` is true. Vite strips it
-   from the production build; it exists so changes can be checked by script
-   rather than by eye.
+5. **Touch is verified in emulation, not on physical hardware.** The 844×390 and
+   390×780 layouts, stick, 360° look and every button are scripted green, but
+   thumb reach, Safari address-bar resize and real GPU frame rate need a phone.
+6. **The dev hook.** `main.js` exposes `window.__sniper` (including `weapon`,
+   `setZoom`, `touchState` and `zoom()`) when `import.meta.env.DEV` is true. Vite
+   strips it from the production build; it exists so changes can be checked by
+   script rather than by eye.
 
 ---
 
 ## Next steps
 
-1. Play it by hand: `npm run dev`, one full round on each map. The scripted
-   checks prove it runs and shoots; they cannot tell you whether it feels good.
-2. Decide two things the owner has not answered: **should the game start in
+1. Play it by hand: `npm run dev` on a laptop and the live URL on an iPhone and
+   an Android phone. The scripted checks prove it runs, moves and shoots; they
+   cannot tell you whether it feels good.
+2. Judge the touch feel: stick dead zone, drag sensitivity at 4×/8×, thumb reach
+   to FIRE and AIM, and whether auto-breath on scope is too forgiving.
+3. Decide two things the owner has not answered: **should the game start in
    third person?** and **is ×8 too strong / too weak?**
-3. Decide the view default. It currently starts in first person with `V` to pull
-   back.
 4. Tune exposure-per-shot until two quick shots reliably get you found and three
    slow ones doesn't.
-5. Add touch movement if the phone matters — magnification now has a button, but
-   a phone still cannot walk.
-6. Add a second weapon (the view-model builder is self-contained, so this is a
+5. Add a second weapon (the view-model builder is self-contained, so this is a
    data change plus a `setWeapon()` on `main.js`) if the owner wants variety.
-7. Generate `public/cover.png` from `tools/cover.html`, then build and deploy.
+6. Next feature candidates: the Nemesis sniper, a daily seeded contract, or
+   medals on the results card.
+7. Ship: `npm run build`, commit `dist/`, push — start.ng updates the live game.
 
 ---
 

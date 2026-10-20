@@ -46,6 +46,7 @@ There is no test suite. Verify by hand, or by script.
 scratch directory outside the repo:
 
 ```
+mobile.mjs     — phone controls: 360° look, stick, every action, portrait/landscape
 extraction.mjs — Paluu: quiet/loud exits, marker, hunters, HUD, shells, win
 objectives.mjs — plans/kill-destroy-hold, ammo, camp+towers, sabotage, return fire
 camp.mjs       — campaign ladder, difficulty, skirmish, bread band, regen, animals
@@ -54,10 +55,13 @@ chain2.mjs     — sortie-1 tutorial chain to the general win, rechamber-aware
 shots-return.mjs — extraction flare, shell impact and under-fire results shots
 ```
 
-Run order after any menu/round/enemy change: `extraction.mjs`, `objectives.mjs`,
-`camp.mjs`, `loadout.mjs`, `chain2.mjs`. `chain2.mjs` clears localStorage first
-and zeroes heat so it always runs the sortie-1 clean win; the others clear on
-boot too. Headless quirks (budget generous): rAF throttled to ~1–14 fps there,
+Run order after any menu/round/enemy/input change: `mobile.mjs`,
+`extraction.mjs`, `objectives.mjs`, `camp.mjs`, `loadout.mjs`, `chain2.mjs`.
+`mobile.mjs` uses `Emulation.setDeviceMetricsOverride` (844×390 and 390×780),
+`Emulation.setTouchEmulationEnabled` and emulated `hover:none` / `pointer:coarse`
+media features; it dispatches synthetic `PointerEvent`s with `pointerType:
+'touch'`. `chain2.mjs` clears localStorage first and zeroes heat so it always
+runs the sortie-1 clean win; the others clear on boot too. Headless quirks (budget generous): rAF throttled to ~1–14 fps there,
 so sleeps must be long and time-based mechanics need polling; aim-teleport AND
 `fireShot()` must share one `Runtime.evaluate` (the frame loop re-aims between
 evals); the rechamber guarantee is only testable inside one evaluation;

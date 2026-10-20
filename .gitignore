@@ -6,3 +6,5 @@ node_modules/
 
 # NOTE: dist/ is intentionally NOT ignored. start.ng serves the static build
 # from the repository, so the built game has to be committed.
+.vercel
+.env*

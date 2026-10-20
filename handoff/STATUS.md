@@ -1,10 +1,44 @@
 # Status
 
-Last updated: 2026-10-20 (tenth pass — Paluu: the return)
+Last updated: 2026-10-20 (eleventh pass — full mobile controls)
 
 ## Done
 
-### This pass (tenth) — Paluu (The Return)
+### This pass (eleventh) — phone controls
+- **Full touch control layer.** Left analog stick for movement, drag anywhere on
+  the world to look with **unbounded yaw** (a complete 360° and beyond — the old
+  ±π clamp is gone), and a right-hand action cluster: `FIRE`, `AIM` (toggle),
+  `RELOAD`, `ZOOM`, `VIEW` (first/third), `BREAD`; movement toggles `CROUCH` and
+  `RUN` sit above the stick. Every laptop key has a touch equivalent.
+- **Control state is shared with the keyboard.** The stick writes the same
+  `fwd`/`strafe` input the keys do; crouch/sprint are merged into the same round
+  input. The round rules do not know which device is in use.
+- **360° look** works with the mouse and touch; pitch still clamps. Touch look
+  is pointer-id-owned, so a second thumb on the stick or a button cannot reset
+  the view mid-turn. Tap-to-fire on the world was removed — the dedicated FIRE
+  button is the only trigger, so looking around cannot fire a shot by accident.
+- **Breath on touch:** scoping in holds your breath automatically (the Shift job
+  when aiming), with the same stamina cost.
+- **HUD reflow for phones.** Score strip drops the secondary columns, the meters
+  gain a translucent panel and move mid-left, the bread count moves onto the
+  `BREAD` button, and the objective gets its own row in portrait. Safe-area
+  insets and `viewport-fit=cover` keep controls off the notch/home bar.
+- **Layout and lifecycle:** controls are hidden in the menu, results and pause
+  (body `in-round` / `paused` classes), return on resume, and reset on blur.
+  A portrait menu shows a one-line "Rotate to landscape" hint; the game itself
+  is fully playable upright.
+- **iOS audio:** the first pointerdown anywhere unlocks WebAudio, not just a
+  canvas press, so the synth wakes on a menu tap.
+- **HUD bugs fixed:** `.hud-level` had no CSS at all and sat on top of the
+  start.ng profile card; it now sits beneath it. Meter labels were clipped by
+  their 52 px flex basis; widened to 62 px.
+- **Verification:** new `mobile.mjs`, ALL GREEN (coarse-pointer detection,
+  hidden-in-menu controls, all 8 actions, 360° swipe past 2π, stick movement and
+  release, bread heal, fire, reload, crouch, run, aim, zoom, view, pause/resume,
+  portrait layout, no overlap, canvas fill, desktop hides controls). All five
+  desktop suites still green.
+
+### Previous pass (tenth) — Paluu (The Return)
 - **The sortie has an ending now.** When the last objective falls, the round
   does not cut to results. `round.heat` (accrued while exposure > 50, plus a
   little per shot and per hit) decides which exit you get:
@@ -156,24 +190,32 @@ Last updated: 2026-10-20 (tenth pass — Paluu: the return)
 
 ## Next
 
-1. Hand-play Paluu on a loud and a quiet run. Judge: is the clean-exit threshold
+1. Hand-play on a real iPhone and a real Android phone in both orientations.
+   Judge: thumb reach to `FIRE`/`AIM`, stick dead zone, drag sensitivity at 4×
+   and 8×, and whether the auto-breath on scope is too forgiving.
+2. Hand-play Paluu on a loud and a quiet run. Judge: is the clean-exit threshold
    reachable without deliberately not shooting? Is the barrage survivable at
    sortie 1 / 25 / 49? Does the 46–62 m run feel like a climax or a chore?
-2. Hand-play sorties 1–5 and 49–50. Judge: does each plan feel distinct? Is the
+3. Hand-play sorties 1–5 and 49–50. Judge: does each plan feel distinct? Is the
    sniper duel survivable on Veteran? Is the first return-fire exchange too
    sharp (enemy fire starts at exposure 48, aim delay 0.5 s)?
-3. Watchtower readability: confirm the platform guards read at 120 m on a
+4. Watchtower readability: confirm the platform guards read at 120 m on a
    laptop, and that tower legs do not hide the camp behind them on Salla.
-4. Evaluate mastery feedback: results card could show "sortie streak", per-plan
+5. Evaluate mastery feedback: results card could show "sortie streak", per-plan
    completion stars or a chapter medal — cheap additive retention.
-5. Touch: movement for phones is still missing (see below).
-6. `tools/cover.html` → `public/cover.png`, then deploy to start.ng.
+6. Ship future changes: `npm run build`, commit `dist/`, push — the live game
+   updates itself.
 
 ## Current state
 
-- **Builds?** Yes. `npm run build` clean (~112 kB app JS gzipped ~38.9 kB).
+- **Builds?** Yes. `npm run build` clean (~115 kB app JS gzipped ~40.0 kB).
 - **Runs?** Yes, headless Chromium + SwiftShader; `#fatal` never shows.
 - **Suites (CDP against `npm run dev`, scripts in the temp workspace):**
+  - `mobile.mjs` — MOBILE ALL GREEN: emulated 844×390 and 390×780, coarse
+    pointer, touch controls hidden in menu and shown in round, 8 actions, 360°
+    drag, stick movement/release, bread heal, fire, reload, crouch, run, aim,
+    zoom, view, pause/resume, HUD overlap checks, canvas fill, desktop hides
+    controls.
   - `extraction.mjs` — PALUU ALL GREEN: quiet run wins clean and never starts an
     extraction; loud run enters extraction, marker visible, hunters spawned,
     FALL BACK + bearing arrow, shellfire scheduled, a direct shell drains blood,
@@ -202,7 +244,8 @@ Last updated: 2026-10-20 (tenth pass — Paluu: the return)
   of the camp with two watchtowers, tents, crates, flag and a guard.
 - **Known-broken / unverified:** real-device feel and frame rate; no collision
   with scenery (the camp is walk-through); third-person camera can clip a large
-  trunk; no touch movement; animals not eyeballed in motion; return-fire and
-  barrage balance not yet hand-judged; the camp adds roughly 100 draw calls, so
-  phone frame rate needs a check. The extraction HUD updates two DOM nodes per
-  frame during the finale — measured as cheap, but worth watching on a phone.
+  trunk; animals not eyeballed in motion; return-fire and barrage balance not
+  yet hand-judged; the camp adds roughly 100 draw calls, so phone frame rate
+  needs a check. Touch controls are verified in emulation, not yet on a physical
+  iPhone/Android (thumb reach, Safari address-bar resize, and real GPU frame
+  rate remain hand-play items).

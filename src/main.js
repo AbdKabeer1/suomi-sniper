@@ -153,16 +153,19 @@ resize();
 // Aim and view state
 // ---------------------------------------------------------------------------
 
-// A rifleman can turn all the way round now that he walks. Pitch stays limited
-// because you're a man with a rifle, not a gun turret.
-const YAW_LIMIT = Math.PI;
+// Yaw is deliberately unbounded: a player can spin a full 360° and keep going.
+// Capping it at ±π stopped continuous turning at the half-turn, which read as
+// the game fighting the mouse. Pitch stays limited — you're a man with a rifle,
+// not a gun turret.
 const PITCH_MIN = -0.5;
 const PITCH_MAX = 0.4;
 
 const VIEW = { FIRST: 'first', THIRD: 'third' };
 
-// Phones have no wheel and no right-click. Used only to word the aiming hint.
+// Phones have no wheel and no right-click. Used to word the aiming hint, to add
+// the touch body class, and to auto-hold breath behind the scope.
 const TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+if (TOUCH) document.body.classList.add('touch-device');
 
 const aim = { yaw: 0, pitch: 0, targetYaw: 0, targetPitch: 0, recoilKick: 0 };
 
@@ -306,7 +309,17 @@ function loadMap(mapOrId) {
 
 const keys = new Set();
 let pointerLocked = false;
-let touchDrag = { active: false, moved: false, x: 0, y: 0 };
+let touchDrag = { active: false, id: null, x: 0, y: 0 };
+
+// iOS only starts audio from a user gesture. Catch the first tap anywhere — a
+// menu button counts — so the synth is awake by the time the first shot needs it.
+document.addEventListener('pointerdown', () => unlockAudio(), { once: true, passive: true });
+// Virtual stick and toggle state. These are merged into the same input the
+// keyboard produces, so the round rules do not know or care which device is in
+// the player's hands.
+const touchMove = { x: 0, y: 0 };
+let touchCrouch = false;
+let touchSprint = false;
 
 // Pointer lock on desktop: a sniper game needs the mouse to turn the head, and
 // without lock the cursor hits the edge of the window and the aim stops. It is
@@ -348,7 +361,8 @@ function lookSensitivity(base = 0.0016) {
 // the edge of the window — movementX/Y is the same either way.
 document.addEventListener('mousemove', (e) => {
   const s = lookSensitivity();
-  aim.targetYaw = THREE.MathUtils.clamp(aim.targetYaw - e.movementX * s, -YAW_LIMIT, YAW_LIMIT);
+  // No yaw clamp: the view keeps turning past the half-turn.
+  aim.targetYaw -= e.movementX * s;
   aim.targetPitch = THREE.MathUtils.clamp(aim.targetPitch - e.movementY * s, PITCH_MIN, PITCH_MAX);
 });
 
@@ -364,31 +378,55 @@ canvas.addEventListener(
   { passive: false }
 );
 
-// Touch: drag to aim, and a tap that didn't drag fires.
+// Touch: drag anywhere on the world to look. The controls live in their own
+// corners, so there is no "look pad" to find — the whole open screen turns the
+// view, which is what makes a 360° spin feel natural on a phone.
+//
+// One pointer owns the look at a time. A second finger is either on the stick or
+// on a button, and must not reset the view mid-turn.
 canvas.addEventListener('pointerdown', (e) => {
-  if (e.pointerType === 'mouse') return;
+  if (e.pointerType === 'mouse' || !started) return;
+  if (touchDrag.active) return;
   unlockAudio();
-  touchDrag = { active: true, moved: false, x: e.clientX, y: e.clientY };
+  touchDrag = { active: true, id: e.pointerId, x: e.clientX, y: e.clientY };
+  try {
+    canvas.setPointerCapture(e.pointerId);
+  } catch {
+    // Synthetic pointers in tests cannot be captured; dragging still works.
+  }
 });
 
 canvas.addEventListener('pointermove', (e) => {
-  if (!touchDrag.active || e.pointerType === 'mouse') return;
+  if (!touchDrag.active || e.pointerId !== touchDrag.id) return;
   const dx = e.clientX - touchDrag.x;
   const dy = e.clientY - touchDrag.y;
   touchDrag.x = e.clientX;
   touchDrag.y = e.clientY;
-  if (Math.abs(dx) + Math.abs(dy) > 3) touchDrag.moved = true;
-  const s = lookSensitivity(0.004);
-  aim.targetYaw = THREE.MathUtils.clamp(aim.targetYaw - dx * s, -YAW_LIMIT, YAW_LIMIT);
+  const s = lookSensitivity(0.0068);
+  aim.targetYaw -= dx * s;
   aim.targetPitch = THREE.MathUtils.clamp(aim.targetPitch - dy * s, PITCH_MIN, PITCH_MAX);
 });
 
-canvas.addEventListener('pointerup', (e) => {
-  if (e.pointerType === 'mouse') return;
-  const wasTap = touchDrag.active && !touchDrag.moved;
+function endTouchLook(e) {
+  if (e.pointerId !== touchDrag.id) return;
   touchDrag.active = false;
-  if (wasTap) fireShot();
-});
+  touchDrag.id = null;
+}
+canvas.addEventListener('pointerup', endTouchLook);
+canvas.addEventListener('pointercancel', endTouchLook);
+canvas.addEventListener('lostpointercapture', endTouchLook);
+
+// Losing focus with a finger down should not leave the player walking into a
+// tree. Pausing, quitting and restarting all run through this too.
+function resetTouchState() {
+  touchMove.x = 0;
+  touchMove.y = 0;
+  touchCrouch = false;
+  touchSprint = false;
+  touchDrag.active = false;
+  touchDrag.id = null;
+  ui.resetAim();
+}
 
 window.addEventListener('keydown', (e) => {
   unlockAudio();
@@ -434,6 +472,7 @@ window.addEventListener('keyup', (e) => {
 window.addEventListener('blur', () => {
   keys.clear();
   dropAim();
+  resetTouchState();
 });
 
 // The menu's rifle pick. One function so both persistence and the live view
@@ -535,11 +574,12 @@ function eatAmmo() {
 function togglePause(force) {
   if (!started || round.status !== STATUS.PLAYING) return;
   const next = typeof force === 'boolean' ? force : !ui.paused;
+  document.body.classList.toggle('paused', next);
 
   if (next) {
     dropAim();
     ui.showPause({
-      onResume: () => ui.hidePause(),
+      onResume: () => togglePause(false),
       onRestart: () => {
         ui.hidePause();
         // The same sortie number again — restart replays what you are on,
@@ -550,6 +590,8 @@ function togglePause(force) {
       onQuit: () => {
         ui.hidePause();
         started = false;
+        resetTouchState();
+        document.body.classList.remove('in-round', 'paused');
         reticle.hide();
       ui.showMenu(
         player,
@@ -606,6 +648,9 @@ function startRound(mapId, levelOverride) {
   round.start();
   started = true;
   shake = 0;
+  resetTouchState();
+  document.body.classList.add('in-round');
+  document.body.classList.remove('paused');
   ui.hideMenu();
   ui.setPlayer(player, signedIn, () => goToSignIn());
   ui.setHud(round.snapshot());
@@ -734,6 +779,8 @@ function handleGameEvent(event) {
 
 async function finishRound(event) {
   started = false;
+  resetTouchState();
+  document.body.classList.remove('in-round', 'paused');
   dropAim();
   reticle.hide();
   if (world && world.hideExtraction) world.hideExtraction();
@@ -836,8 +883,8 @@ function frame() {
   // with the scope up, it's a held breath. On the move, it's a sprint. Both are
   // the same instinct — commit, briefly — so one key is enough.
   const shift = keys.has('ShiftLeft') || keys.has('ShiftRight');
-  const crouching = keys.has('KeyC') || keys.has('ControlLeft');
-  const sprinting = shift && !aiming && !crouching;
+  const crouching = keys.has('KeyC') || keys.has('ControlLeft') || touchCrouch;
+  const sprinting = (shift || touchSprint) && !aiming && !crouching;
 
   // ---- Breathing ----
   // Two slow waves, so the sway never repeats on an obvious beat. Holding your
@@ -845,7 +892,9 @@ function frame() {
   // which is what makes bringing the rifle up worth doing.
   breathPhase += dt * (1.1 + p.exposure / 220);
   if (rechamberLeft > 0) rechamberLeft = Math.max(0, rechamberLeft - dt);
-  round.setBreathHold(shift && aiming);
+  // A phone has no Shift. Scoping in already steadies the rifle, so on touch the
+  // hold is automatic while the glass is up — the stamina cost is unchanged.
+  round.setBreathHold(shift || (TOUCH && aiming));
   const steady = round.breathHold;
   const aimSteady = aiming ? 0.5 : 1;
 
@@ -893,8 +942,16 @@ function frame() {
   // Pushed before the round integrates it, so movement and exposure are
   // calculated from the same frame's intent.
   round.setInput({
-    fwd: (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0),
-    strafe: (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0),
+    fwd: THREE.MathUtils.clamp(
+      (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0) + touchMove.y,
+      -1,
+      1
+    ),
+    strafe: THREE.MathUtils.clamp(
+      (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0) + touchMove.x,
+      -1,
+      1
+    ),
     crouch: crouching,
     sprint: sprinting,
     aiming,
@@ -1077,6 +1134,21 @@ function updateReticle(map) {
 ui.onPause(() => togglePause());
 ui.onFire(() => fireShot());
 ui.onAim((down) => setAiming(down));
+// The rest of the laptop's keys, as touch controls. Movement is analog; the
+// toggles are edge-triggered so a thumb does not have to hold them.
+ui.onMove((v) => {
+  touchMove.x = v.x;
+  touchMove.y = v.y;
+});
+ui.onReload(() => eatAmmo());
+ui.onCrouch((on) => {
+  touchCrouch = on;
+});
+ui.onSprint((on) => {
+  touchSprint = on;
+});
+ui.onView(() => toggleView());
+ui.onBread(() => eatBread());
 // A phone has no wheel, so the magnification ring gets its own button.
 ui.onZoom(() => {
   if (aiming && viewMode === VIEW.FIRST) cycleZoom();
@@ -1150,6 +1222,15 @@ if (import.meta.env.DEV) {
     },
     get difficultyId() {
       return difficultyId;
+    },
+    // Dev-only view of the virtual stick and toggles, for the mobile suite.
+    get touchState() {
+      return {
+        move: { x: touchMove.x, y: touchMove.y },
+        crouch: touchCrouch,
+        sprint: touchSprint,
+        dragging: touchDrag.active,
+      };
     },
   };
 }

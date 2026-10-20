@@ -51,20 +51,23 @@ Node 18 or newer.
 
 | Action | Mouse and keyboard | Touch |
 | --- | --- | --- |
-| Move | `W` `A` `S` `D` | — |
-| Look | Move the mouse | Drag |
+| Move | `W` `A` `S` `D` | `MOVE` stick (bottom-left) |
+| Look | Move the mouse | Drag anywhere on the world — full 360° |
 | Raise the scope | Hold right-click | Tap `AIM` (it stays up) |
 | Magnification | Mouse wheel (while scoped) | `ZOOM` button |
-| Fire | Click, or `Space` | Tap, or the `FIRE` button |
-| Sprint / hold your breath | `Shift` | — |
-| Crouch | Hold `C` or `Ctrl` | — |
-| First / third person | `V` | — |
-| Eat winter bread | `F` | — |
+| Fire | Click, or `Space` | `FIRE` button |
+| Sprint / hold your breath | `Shift` | `RUN` toggle; breath holds automatically while scoped |
+| Crouch | Hold `C` or `Ctrl` | `CROUCH` toggle |
+| First / third person | `V` | `VIEW` button |
+| Reload the clip | `R` | `RELOAD` button |
+| Eat winter bread | `F` | `BREAD` button (shows how many you carry) |
 | Pause | `Esc` or `P` | The `II` button |
 
 Clicking locks the mouse so the cursor can't reach the edge of the window, but
 aiming works without it — you only need to lock if the edge gets in the way.
-On the menu, `1`–`4` pick a map directly.
+On the menu, `1`–`4` pick a map directly. On a phone, the controls appear only
+during a sortie; the menu uses the same touch cards, and the game is playable in
+both orientations (landscape gives the wider view).
 
 **`Shift` does whichever job fits the moment.** Standing still, it's a held
 breath: the sway flattens and stamina drains. Moving, it's a sprint: much faster,
@@ -77,7 +80,9 @@ the bracket snaps onto whoever is under the crosshair and shows his range; it
 turns orange when the shot is on him — the same number decides whether the shot
 lands, so orange really does mean "this one connects". On a phone tap `AIM` to
 bring the scope up (tap again to drop it), `ZOOM` to change magnification, and
-`FIRE` to shoot.
+`FIRE` to shoot. The left stick walks, dragging the open screen turns the view a
+full 360°, and `RELOAD`, `RUN`, `CROUCH`, `VIEW` and `BREAD` replace the rest of
+the keyboard.
 
 **At the hip you get a centre dot, not a crosshair.** The rifle view model sits
 low and to the right of frame and is not where the round goes; the dot is. The

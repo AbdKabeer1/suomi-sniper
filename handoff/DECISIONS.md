@@ -2,6 +2,45 @@
 
 Record choices that the next agent should not re-litigate without a reason.
 
+## 2026-10-20 — Touch controls share the keyboard's input, not its own rules
+
+- Context: an iPhone has no keyboard, so movement, reload, crouch, sprint, view
+  and bread had no input at all. Only aim/zoom/fire existed.
+- Chosen: a fixed left stick, drag-anywhere look, and a right-hand cluster of
+  eight labelled buttons. The stick writes the same `fwd`/`strafe` numbers the
+  keys write; toggles write the same booleans. `Round` never learns the device.
+- Why: duplicating rules for touch would drift. One input surface means the
+  keyboard, phone and any future gamepad all play the same game, and every
+  desktop regression suite keeps testing the same code path.
+- Trade-off: analog stick magnitude is normalized by `Round` (it normalizes the
+  wish vector), so pushing the stick halfway does not walk slower. That is a
+  deliberate simplification; if analog speed matters, add a magnitude field to
+  the input rather than a second movement path.
+
+## 2026-10-20 — Unbounded yaw; one look pointer; no tap-to-fire
+
+- Chosen: remove the ±π yaw clamp for mouse and touch. Touch look tracks a
+  pointer id, so a second thumb cannot steal the turn. Tapping the world no
+  longer fires; the `FIRE` button is the only trigger.
+- Why: a 360° view is the point of a look control, and the clamp made a
+  half-turn feel like a wall. With a dedicated FIRE button, tap-to-fire only
+  produced accidental shots while trying to look — the worst possible mistake in
+  a stealth game.
+- Trade-off: the whole open screen is the look area, so the corners must stay
+  reserved for the stick and actions. The container is `pointer-events: none`
+  except for the controls themselves, so drags in the gaps still reach the
+  canvas.
+
+## 2026-10-20 — Touch holds breath automatically; buttons are toggles
+
+- Chosen: aiming on a touch device sets the breath-hold, at the normal stamina
+  cost. AIM/CROUCH/RUN are taps, not holds.
+- Why: Shift has two jobs and a phone has no Shift; scoping in is already the
+  "commit" gesture, so tying breath to it is legible. A hold button fights the
+  thumb that has to keep dragging the view.
+- Trade-off: a touch player cannot hold breath without scoping. That is the
+  same trade the scope already makes for a mouse player.
+
 ## 2026-10-20 — Paluu: the ending is earned by heat, not fixed
 
 - Context: every sortie ended the moment the last objective died, which killed
