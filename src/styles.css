@@ -1954,8 +1954,8 @@ body.locked {
   transform: rotate(90deg);
 }
 
-@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
-  body:not(.in-round) .rotate-hint {
+@media (orientation: portrait) {
+  body.touch-device:not(.in-round) .rotate-hint {
     display: flex;
   }
 }
@@ -2085,111 +2085,106 @@ body.locked {
    BREAD button. The stick owns the bottom-left; FIRE owns the bottom-right.
 --------------------------------------------------------------------------- */
 
-@media (hover: none) and (pointer: coarse) {
-  body.in-round:not(.paused) .touch-controls {
-    display: flex;
-  }
+body.touch-device.in-round:not(.paused) .touch-controls {
+  display: flex;
+}
 
-  body.touch-device .bread,
-  body.touch-device .ammo-hint {
-    display: none;
-  }
+body.touch-device .bread,
+body.touch-device .ammo-hint {
+  display: none;
+}
 
-  /* On a phone the strip keeps enemies down and the sortie number; columns and
-     breaches live in the results card. */
-  body.touch-device .hud-scores .hud-stat:nth-child(2),
-  body.touch-device .hud-scores .hud-stat:nth-child(3) {
-    display: none;
-  }
+/* On a phone the strip keeps enemies down and the sortie number; columns and
+   breaches live in the results card. */
+body.touch-device .hud-scores .hud-stat:nth-child(2),
+body.touch-device .hud-scores .hud-stat:nth-child(3) {
+  display: none;
+}
 
-  .hud-scores {
-    top: calc(10px + env(safe-area-inset-top));
-    gap: 10px;
-    padding: 7px 13px;
-  }
+body.touch-device .hud-scores {
+  top: calc(10px + env(safe-area-inset-top));
+  gap: 10px;
+  padding: 7px 13px;
+}
 
-  .startng-card {
-    top: calc(10px + env(safe-area-inset-top));
-    left: calc(10px + env(safe-area-inset-left));
-  }
+body.touch-device .startng-card {
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+}
 
-  .hud-level {
-    top: calc(64px + env(safe-area-inset-top));
-    left: calc(12px + env(safe-area-inset-left));
-  }
+body.touch-device .hud-level {
+  top: calc(64px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(8, 12, 16, 0.42);
+}
 
-  .hud-btn {
-    top: calc(10px + env(safe-area-inset-top));
-    right: calc(10px + env(safe-area-inset-right));
-  }
+body.touch-device .hud-btn {
+  top: calc(10px + env(safe-area-inset-top));
+  right: calc(10px + env(safe-area-inset-right));
+}
 
-  .meters {
-    left: calc(10px + env(safe-area-inset-left));
-    top: 34%;
-    bottom: auto;
-    width: 150px;
-    padding: 6px 8px;
-    border-radius: 10px;
-    background: rgba(8, 12, 16, 0.42);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-  }
+body.touch-device .meters {
+  left: calc(10px + env(safe-area-inset-left));
+  top: 34%;
+  bottom: auto;
+  width: 150px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(8, 12, 16, 0.42);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
 
-  .hud-level {
-    padding: 3px 8px;
-    border-radius: 999px;
-    background: rgba(8, 12, 16, 0.42);
-  }
+body.touch-device .ammo {
+  top: calc(58px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  left: auto;
+  margin-left: 0;
+  padding: 6px 12px;
+}
 
-  .ammo {
-    top: calc(58px + env(safe-area-inset-top));
-    right: calc(12px + env(safe-area-inset-right));
-    left: auto;
-    margin-left: 0;
-    padding: 6px 12px;
-  }
+body.touch-device .mission {
+  top: calc(58px + env(safe-area-inset-top));
+  max-width: min(420px, calc(100vw - 240px));
+}
 
-  .mission {
-    top: calc(58px + env(safe-area-inset-top));
-    max-width: min(420px, calc(100vw - 240px));
-  }
+body.touch-device .extraction {
+  top: calc(104px + env(safe-area-inset-top));
+  bottom: auto;
+}
 
-  .extraction {
-    top: calc(104px + env(safe-area-inset-top));
-    bottom: auto;
-  }
-
-  .toast {
-    top: 58%;
-  }
+body.touch-device .toast {
+  top: 58%;
 }
 
 /* A phone held upright: give the objective its own row under the ammo chip. */
-@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
-  .mission {
+@media (orientation: portrait) {
+  body.touch-device .mission {
     top: calc(104px + env(safe-area-inset-top));
     max-width: calc(100vw - 24px);
   }
 
-  .extraction {
+  body.touch-device .extraction {
     top: calc(146px + env(safe-area-inset-top));
   }
 
-  .meters {
+  body.touch-device .meters {
     top: 42%;
   }
 
-  .touch-right {
+  body.touch-device .touch-right {
     grid-template-columns: 66px 90px;
     grid-template-rows: 48px 56px 90px;
   }
 
-  .touch-fire {
+  body.touch-device .touch-fire {
     width: 90px;
     height: 90px;
   }
 
-  .touch-aim {
+  body.touch-device .touch-aim {
     width: 68px;
     height: 68px;
   }

@@ -183,6 +183,11 @@ export function createUI(root) {
   // a hold button would fight the thumb that is dragging the view. Drag anywhere
   // else on the glass to look; yaw is unbounded, so the view spins a full 360.
   const touchQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
+  // Same fallback as main.js: a touch device with no fine pointer is a phone or
+  // tablet even if the pointer media features are unreliable.
+  const touchDevice =
+    touchQuery.matches ||
+    (navigator.maxTouchPoints > 0 && !window.matchMedia('(any-pointer: fine)').matches);
   let aimingTouch = false;
 
   function makeToggle(className, label, onToggle) {
@@ -712,7 +717,7 @@ export function createUI(root) {
 
   // A keyboard legend is useless on a phone. Swap it for the actual touch
   // vocabulary so a first-time mobile player can see the controls immediately.
-  if (touchQuery.matches) {
+  if (touchDevice) {
     controls.innerHTML = '';
     const touchRows = [
       ['STICK', 'move'],

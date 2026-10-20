@@ -23,6 +23,11 @@ Last updated: 2026-10-20 (eleventh pass — full mobile controls)
   gain a translucent panel and move mid-left, the bread count moves onto the
   `BREAD` button, and the objective gets its own row in portrait. Safe-area
   insets and `viewport-fit=cover` keep controls off the notch/home bar.
+- **Detection fallback.** Touch mode turns on for a coarse pointer *or* any
+  touch device with no fine pointer; the `touch-device` body class drives the
+  layout and visibility, so an Android WebView or in-app browser that reports
+  pointer media oddly still gets the controls instead of a game with invisible
+  input.
 - **Layout and lifecycle:** controls are hidden in the menu, results and pause
   (body `in-round` / `paused` classes), return on resume, and reset on blur.
   A portrait menu shows a one-line "Rotate to landscape" hint; the game itself

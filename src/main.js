@@ -164,7 +164,14 @@ const VIEW = { FIRST: 'first', THIRD: 'third' };
 
 // Phones have no wheel and no right-click. Used to word the aiming hint, to add
 // the touch body class, and to auto-hold breath behind the scope.
-const TOUCH = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+//
+// The pointer media query is the primary signal, but some Android WebViews and
+// in-app browsers report it oddly. A touch device with no fine pointer is a
+// phone or tablet regardless, so fall back to that instead of shipping a game
+// with invisible controls.
+const TOUCH =
+  window.matchMedia('(hover: none) and (pointer: coarse)').matches ||
+  (navigator.maxTouchPoints > 0 && !window.matchMedia('(any-pointer: fine)').matches);
 if (TOUCH) document.body.classList.add('touch-device');
 
 const aim = { yaw: 0, pitch: 0, targetYaw: 0, targetPitch: 0, recoilKick: 0 };
