@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Suomi Sniper — Winter War</title>
+    <!-- Nothing to fetch: keeps local play from logging a favicon 404. -->
+    <link rel="icon" href="data:," />
+    <meta
+      name="description"
+      content="A stealth sniper game set in the Finnish Winter War. Stay hidden, hold the line, and do not be found."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-BR5l9Ol1.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/three-JwKKA26T.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-Biv-It0y.css">
+  </head>
+  <body>
+    <!-- The Three.js canvas. CSS gives it the whole viewport and the renderer
+         matches that box; the scope glass and HUD are DOM drawn on top. -->
+    <canvas id="scene"></canvas>
+
+    <!-- Sights, HUD and menus are DOM. Text stays crisp at any density, the
+         controls are real focusable elements, and the sway animation is CSS. -->
+    <div id="ui"></div>
+
+  </body>
+</html>

@@ -1,0 +1,8 @@
+{
+  "leaderboard": {
+    "stats": [
+      { "key": "kills", "label": "Enemies down", "order": "highest" },
+      { "key": "linesHeld", "label": "Columns stopped", "order": "highest" }
+    ]
+  }
+}

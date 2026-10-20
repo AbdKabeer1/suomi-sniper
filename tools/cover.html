@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Suomi Sniper — cover generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Outfit:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        gap: 20px;
+        background: #0b1014;
+        color: #eef4f9;
+        font-family: Outfit, sans-serif;
+        text-align: center;
+        padding: 24px;
+      }
+      canvas {
+        width: min(90vw, 1000px);
+        height: auto;
+        border-radius: 12px;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+      }
+      button {
+        padding: 14px 34px;
+        border: 0;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #6b93c8, #2b4a7a);
+        color: #fff;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      p {
+        max-width: 46ch;
+        line-height: 1.55;
+        opacity: 0.75;
+        font-size: 14px;
+        margin: 0;
+      }
+      code {
+        color: #6b93c8;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="1600" height="1000"></canvas>
+    <button id="save">Download cover.png</button>
+    <p>
+      1600 × 1000, the size start.ng recommends. Save it as
+      <code>cover.png</code> in <code>public/</code> so every build copies it
+      into <code>dist/</code>, then commit and push.
+    </p>
+
+    <script>
+      // The card picture: a Finnish treeline in winter, a man in white who is
+      // only just visible in it, and the sights. Regenerate for a different
+      // arrangement of trees by reloading.
+      const c = document.getElementById('c');
+      const ctx = c.getContext('2d');
+      const W = c.width;
+      const H = c.height;
+
+      // ---- Sky: cold, low, winter light ----
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0.0, '#1e3a57');
+      sky.addColorStop(0.3, '#3f6f9e');
+      sky.addColorStop(0.58, '#a8c4dc');
+      sky.addColorStop(0.78, '#dce9f2');
+      sky.addColorStop(1.0, '#eef4f9');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+
+      // Low sun, pale and cold, not warm like a summer sky.
+      const sunX = W * 0.78;
+      const sunY = H * 0.42;
+      const glow = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, H * 0.6);
+      glow.addColorStop(0, 'rgba(255,250,235,0.55)');
+      glow.addColorStop(0.4, 'rgba(220,233,242,0.18)');
+      glow.addColorStop(1, 'rgba(220,233,242,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+
+      // ---- Distant ridge ----
+      ctx.fillStyle = 'rgba(120,145,168,0.42)';
+      ctx.beginPath();
+      ctx.moveTo(0, H * 0.6);
+      for (let x = 0; x <= W; x += W / 10) {
+        ctx.lineTo(x, H * 0.6 - Math.sin(x * 0.0021) * 40 - Math.cos(x * 0.0053) * 22);
+      }
+      ctx.lineTo(W, H);
+      ctx.lineTo(0, H);
+      ctx.closePath();
+      ctx.fill();
+
+      // ---- Far treeline: a hard serrated edge of pines ----
+      function pineLayer(count, baseY, height, colour, spread) {
+        ctx.fillStyle = colour;
+        for (let i = 0; i < count; i++) {
+          const x = (i / count) * W + (Math.random() - 0.5) * spread;
+          const h = height * (0.6 + Math.random() * 0.8);
+          const w = h * 0.34;
+          // Three stacked triangles make a convincing spruce silhouette.
+          for (let l = 0; l < 3; l++) {
+            const ly = baseY - (l * h) / 3.4;
+            const lw = w * (1 - l * 0.22);
+            ctx.beginPath();
+            ctx.moveTo(x, ly - h / 2);
+            ctx.lineTo(x - lw, ly + h / 7);
+            ctx.lineTo(x + lw, ly + h / 7);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+      }
+
+      pineLayer(46, H * 0.66, 130, 'rgba(96,118,138,0.55)', 26);
+      pineLayer(30, H * 0.72, 190, 'rgba(66,88,104,0.75)', 34);
+
+      // ---- Snowfield, catching the sky ----
+      const snow = ctx.createLinearGradient(0, H * 0.7, 0, H);
+      snow.addColorStop(0, '#dfe9f2');
+      snow.addColorStop(0.5, '#eef4f9');
+      snow.addColorStop(1, '#ccdae6');
+      ctx.fillStyle = snow;
+      ctx.fillRect(0, H * 0.7, W, H);
+
+      // Wind-scoured drift lines, all running the same way.
+      ctx.strokeStyle = 'rgba(150,170,188,0.22)';
+      for (let i = 0; i < 60; i++) {
+        const y = H * 0.72 + Math.random() * H * 0.26;
+        ctx.lineWidth = 1 + Math.random() * 2;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(W * 0.3, y + 14, W * 0.7, y - 14, W, y);
+        ctx.stroke();
+      }
+
+      // ---- Near pines down both edges, framing the shot ----
+      pineLayer(5, H * 0.94, 620, '#1d2b23', 90);
+
+      // ---- The man in white, barely there ----
+      // Deliberately low contrast: the whole idea of the game is that he is
+      // almost impossible to pick out until you know where to look.
+      const mx = W * 0.42;
+      const my = H * 0.82;
+      ctx.fillStyle = 'rgba(245,250,255,0.95)';
+      ctx.beginPath();
+      ctx.ellipse(mx, my, 78, 30, 0, 0, Math.PI * 2); // snow mound
+      ctx.fill();
+
+      ctx.fillStyle = '#f4f8fc';
+      ctx.beginPath();
+      ctx.ellipse(mx + 22, my - 10, 46, 17, -0.06, 0, Math.PI * 2); // coat
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(mx + 62, my - 20, 13, 0, Math.PI * 2); // hood
+      ctx.fill();
+
+      // A dark line for the rifle, which is the only thing that gives him away.
+      ctx.strokeStyle = 'rgba(40,44,48,0.85)';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(mx + 66, my - 18);
+      ctx.lineTo(mx + 128, my - 34);
+      ctx.stroke();
+
+      // Shadow under the mound.
+      ctx.fillStyle = 'rgba(150,170,190,0.25)';
+      ctx.beginPath();
+      ctx.ellipse(mx, my + 26, 84, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // ---- Iron sights, centred ----
+      const cx = W * 0.5;
+      const cy = H * 0.46;
+
+      // Front post.
+      ctx.fillStyle = 'rgba(16,20,24,0.92)';
+      ctx.fillRect(cx - 3, cy, 6, 300);
+
+      // Rear leaf with its notch.
+      ctx.fillStyle = 'rgba(14,18,22,0.95)';
+      ctx.fillRect(cx - 150, cy + 250, 112, 44);
+      ctx.fillRect(cx + 38, cy + 250, 112, 44);
+      ctx.fillRect(cx - 150, cy + 294, 300, 12);
+
+      // ---- Title ----
+      const band = ctx.createLinearGradient(0, 0, 0, H * 0.42);
+      band.addColorStop(0, 'rgba(6,10,14,0.9)');
+      band.addColorStop(0.7, 'rgba(6,10,14,0.45)');
+      band.addColorStop(1, 'rgba(6,10,14,0)');
+      ctx.fillStyle = band;
+      ctx.fillRect(0, 0, W, H * 0.46);
+
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,0.7)';
+      ctx.shadowBlur = 40;
+      ctx.shadowOffsetY = 10;
+
+      ctx.font = '900 140px "Archivo Black", sans-serif';
+      const title = ctx.createLinearGradient(0, H * 0.06, 0, H * 0.22);
+      title.addColorStop(0, '#ffffff');
+      title.addColorStop(1, '#a8c4dc');
+      ctx.fillStyle = title;
+      ctx.fillText('SUOMI', W * 0.5, H * 0.15);
+
+      ctx.font = '900 140px "Archivo Black", sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText('SNIPER', W * 0.5, H * 0.27);
+
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetY = 0;
+
+      // Finnish cross bar, in the flag blue.
+      ctx.fillStyle = '#2b4a7a';
+      ctx.fillRect(W * 0.5 - 300, H * 0.295, 600, 9);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(W * 0.5 - 300, H * 0.312, 600, 4);
+
+      ctx.font = '700 34px Outfit, sans-serif';
+      ctx.fillStyle = 'rgba(238,244,249,0.82)';
+      ctx.fillText('WINTER WAR · 1939', W * 0.5, H * 0.35);
+
+      // ---- Download ----
+      document.getElementById('save').addEventListener('click', () => {
+        c.toBlob((blob) => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'cover.png';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }, 'image/png');
+      });
+    </script>
+  </body>
+</html>
